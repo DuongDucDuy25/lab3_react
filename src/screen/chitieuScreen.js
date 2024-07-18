@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
-import { addChiTieu, deleteChiTieu, updateChiTieu, searchChiTieu, selectTotalThu, selectTotalChi } from '../redux/reducer/chitieuReducer';
+import { addChiTieuAPI, deleteChiTieuAPI, updateChiTieuAPI, fetchChiTieu } from '../redux/Action/Action';
+import { searchChiTieu, selectTotalThu, selectTotalChi } from '../redux/reducer/chitieuReducer';
 
 const ChiTieuScreen = () => {
     const dispatch = useDispatch();
     const listChitieu = useSelector(state => state.chitieu.listChitieu);
     const totalThu = useSelector(selectTotalThu);
     const totalChi = useSelector(selectTotalChi);
-    
+
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [date, setDate] = useState('');
@@ -16,32 +17,73 @@ const ChiTieuScreen = () => {
     const [amount, setAmount] = useState('');
     const [search, setSearch] = useState('');
 
+    const [editTitle, setEditTitle] = useState('');
+    const [editDescription, setEditDescription] = useState('');
+    const [editDate, setEditDate] = useState('');
+    const [editType, setEditType] = useState('');
+    const [editAmount, setEditAmount] = useState('');
+    const [idEdit, setIdEdit] = useState(null);
+
+    useEffect(() => {
+        dispatch(fetchChiTieu());
+    }, [dispatch]);
+
     const handleAdd = () => {
-        const newChiTieu = {
-            id: Date.now().toString(),
+        let newChiTieu = {
             title,
             description,
             date,
             type,
             amount: parseFloat(amount)
         };
-        dispatch(addChiTieu(newChiTieu));
+        dispatch(addChiTieuAPI(newChiTieu))
+        .then((result) => {
+            console.log('Thêm thành công');
+        }).catch((e) => {
+            console.error('Thêm thất bại: ' + e);
+        });
     };
 
-    const handleDelete = (id) => {
-        dispatch(deleteChiTieu(id));
+    const handleDelete = async (id) => {
+        dispatch(deleteChiTieuAPI(id))
+        .then((result) => {
+            console.log('Xóa thành công');
+        }).catch((e) => {
+            console.error('Lỗi: ' + e);
+        });
     };
 
-    const handleUpdate = (id) => {
-        const updatedChiTieu = {
-            id,
-            title,
-            description,
-            date,
-            type,
-            amount: parseFloat(amount)
+    const handleEdit = (item) => {
+        setEditTitle(item.title);
+        setEditDescription(item.description);
+        setEditDate(item.date);
+        setEditType(item.type);
+        setEditAmount(item.amount.toString());
+        setIdEdit(item.id);
+    };
+
+    const handleUpdate = () => {
+        const duLieuUpdate = {
+            id: idEdit,
+            title: editTitle,
+            description: editDescription,
+            date: editDate,
+            type: editType,
+            amount: parseFloat(editAmount)
         };
-        dispatch(updateChiTieu(updatedChiTieu));
+        dispatch(updateChiTieuAPI(duLieuUpdate))
+        .then((result) => {
+            console.log('Cập nhật thành công');
+            setEditTitle('');
+            setEditDescription('');
+            setEditDate('');
+            setEditType('');
+            setEditAmount('');
+            setIdEdit(null);
+        })
+        .catch((error) => {
+            console.error('Lỗi cập nhật:', error);
+        });
     };
 
     const handleSearch = () => {
@@ -88,7 +130,6 @@ const ChiTieuScreen = () => {
                 value={search}
                 onChangeText={setSearch}
             />
-            <Button title="Tìm kiếm" onPress={handleSearch} />
             <View style={styles.totalsContainer}>
                 <Text style={styles.totalText}>Tổng thu: {totalThu}</Text>
                 <Text style={styles.totalText}>Tổng chi: {totalChi}</Text>
@@ -111,13 +152,49 @@ const ChiTieuScreen = () => {
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.button}
-                            onPress={() => handleUpdate(item.id)}
+                            onPress={() => handleEdit(item)}
                         >
-                            <Text style={styles.buttonText}>Cập nhật</Text>
+                            <Text style={styles.buttonText}>Sửa</Text>
                         </TouchableOpacity>
                     </View>
                 )}
             />
+            {idEdit !== null && (
+                <View>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Sửa tiêu đề"
+                        value={editTitle}
+                        onChangeText={setEditTitle}
+                    />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Sửa mô tả"
+                        value={editDescription}
+                        onChangeText={setEditDescription}
+                    />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Sửa ngày"
+                        value={editDate}
+                        onChangeText={setEditDate}
+                    />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Sửa loại"
+                        value={editType}
+                        onChangeText={setEditType}
+                    />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Sửa số tiền"
+                        value={editAmount}
+                        onChangeText={setEditAmount}
+                        keyboardType="numeric"
+                    />
+                    <Button title="Lưu thay đổi" onPress={handleUpdate} />
+                </View>
+            )}
         </View>
     );
 };

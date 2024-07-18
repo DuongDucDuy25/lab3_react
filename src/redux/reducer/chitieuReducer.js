@@ -1,13 +1,17 @@
-import { createSlice, createSelector } from "@reduxjs/toolkit";
+import { createSlice } from '@reduxjs/toolkit';
+import { addChiTieuAPI, deleteChiTieuAPI, updateChiTieuAPI } from '../Action/Action';
 
 const initialState = {
-    listChitieu: []
+    listChitieu: [],
 };
 
 const chitieuSlice = createSlice({
     name: 'chitieu',
     initialState,
     reducers: {
+        setChiTieu(state, action) {
+            state.listChitieu = action.payload;
+        },
         addChiTieu(state, action) {
             state.listChitieu.push(action.payload);
         },
@@ -23,24 +27,53 @@ const chitieuSlice = createSlice({
         searchChiTieu(state, action) {
             state.searchResults = state.listChitieu.filter(item => item.title.includes(action.payload));
         },
-    }
+    },
+    extraReducers: builder => {
+        // Xử lý khi API xóa thành công
+        builder.addCase(deleteChiTieuAPI.fulfilled, (state, action) => {
+            state.listChitieu = state.listChitieu.filter(row => row.id !== action.payload);
+        })
+        .addCase(deleteChiTieuAPI.rejected, (state, action) => {
+            console.log('Xóa không thành công', action.error.message);
+        });
+
+        // Xử lý khi API thêm thành công
+        builder.addCase(addChiTieuAPI.fulfilled, (state, action) => {
+            state.listChitieu.push(action.payload);
+        })
+        .addCase(addChiTieuAPI.rejected, (state, action) => {
+            console.log('Thêm không thành công');
+        });
+
+        // Xử lý khi API cập nhật thành công
+        builder.addCase(updateChiTieuAPI.fulfilled, (state, action) => {
+            const { id, title, description, date, type, amount } = action.payload;
+            const index = state.listChitieu.findIndex(row => row.id === id);
+            if (index !== -1) {
+                state.listChitieu[index] = {
+                    ...state.listChitieu[index],
+                    title,
+                    description,
+                    date,
+                    type,
+                    amount
+                };
+            }
+        })
+        .addCase(updateChiTieuAPI.rejected, (state, action) => {
+            console.log('Sửa thất bại', action.error.message);
+        });
+    },
 });
 
-// Selector để lấy danh sách chi tiêu
-const selectListChitieu = (state) => state.chitieu.listChitieu;
+export const { setChiTieu, addChiTieu, deleteChiTieu, updateChiTieu, searchChiTieu } = chitieuSlice.actions;
 
-// Selector memoized để tính tổng thu
-const selectTotalThu = createSelector(
-    [selectListChitieu],
-    (listChitieu) => listChitieu.filter(item => item.type === 'thu').reduce((total, item) => total + item.amount, 0)
-);
+export const selectListChitieu = (state) => state.chitieu.listChitieu;
 
-// Selector memoized để tính tổng chi
-const selectTotalChi = createSelector(
-    [selectListChitieu],
-    (listChitieu) => listChitieu.filter(item => item.type === 'chi').reduce((total, item) => total + item.amount, 0)
-);
+export const selectTotalThu = (state) =>
+    state.chitieu.listChitieu.filter(item => item.type === 'thu').reduce((total, item) => total + item.amount, 0);
 
-export const { addChiTieu, deleteChiTieu, updateChiTieu, searchChiTieu } = chitieuSlice.actions;
-export { selectTotalThu, selectTotalChi };
+export const selectTotalChi = (state) =>
+    state.chitieu.listChitieu.filter(item => item.type === 'chi').reduce((total, item) => total + item.amount, 0);
+
 export default chitieuSlice.reducer;
