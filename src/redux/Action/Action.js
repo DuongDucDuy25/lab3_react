@@ -72,9 +72,9 @@ export const addChiTieuAPI = createAsyncThunk(
 
 export const updateChiTieuAPI = createAsyncThunk(
     'chitieu/updateChiTieuAPI',
-    async (objupdate,thunkAPI) =>{
+    async (objUpdate,thunkAPI) =>{
         try {
-            const res = await fetch(`${API_URL}/${objupdate.id}`,{
+            const res = await fetch(`${API_URL}/${objUpdate.id}`,{
                 method : 'PUT',
                 headers: {
                     'Accept': 'application/json',

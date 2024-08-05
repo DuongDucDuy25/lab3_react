@@ -3,6 +3,7 @@ import { addChiTieuAPI, deleteChiTieuAPI, updateChiTieuAPI } from '../Action/Act
 
 const initialState = {
     listChitieu: [],
+    searchResults: [],  // Thêm thuộc tính này
 };
 
 const chitieuSlice = createSlice({
@@ -42,22 +43,15 @@ const chitieuSlice = createSlice({
             state.listChitieu.push(action.payload);
         })
         .addCase(addChiTieuAPI.rejected, (state, action) => {
-            console.log('Thêm không thành công');
+            console.log('Thêm không thành công', action.error.message);
         });
 
         // Xử lý khi API cập nhật thành công
         builder.addCase(updateChiTieuAPI.fulfilled, (state, action) => {
             const { id, title, description, date, type, amount } = action.payload;
-            const index = state.listChitieu.findIndex(row => row.id === id);
-            if (index !== -1) {
-                state.listChitieu[index] = {
-                    ...state.listChitieu[index],
-                    title,
-                    description,
-                    date,
-                    type,
-                    amount
-                };
+            const chitieu = state.listChitieu.find(row => row.id === id);
+            if (chitieu) {
+                Object.assign(chitieu, { title, description, date, type, amount });
             }
         })
         .addCase(updateChiTieuAPI.rejected, (state, action) => {

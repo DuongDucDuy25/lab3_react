@@ -71,7 +71,7 @@ const ChiTieuScreen = () => {
             type: editType,
             amount: parseFloat(editAmount)
         };
-        dispatch(updateChiTieuAPI(duLieuUpdate))
+        dispatch(updateChiTieuAPI({id : idEdit,data : duLieuUpdate}))
         .then((result) => {
             console.log('Cập nhật thành công');
             setEditTitle('');
